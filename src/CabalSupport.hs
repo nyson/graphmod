@@ -6,19 +6,19 @@ import Data.Maybe(maybeToList)
 import System.FilePath((</>))
 
 -- Interface to cabal.
-import Distribution.PackageDescription.Parse(readPackageDescription)
+import Distribution.PackageDescription.Parse(readGenericPackageDescription)
 import Distribution.Verbosity(silent)
 import Distribution.PackageDescription
         ( GenericPackageDescription, PackageDescription(..)
         , Library(..), Executable(..), BuildInfo(..) )
 import Distribution.PackageDescription.Configuration (flattenPackageDescription)
 import Distribution.ModuleName(ModuleName,components)
-
+import Distribution.Types.UnqualComponentName (unUnqualComponentName)
 
 
 
 parseCabalFile :: FilePath -> IO [Unit]
-parseCabalFile f = fmap findUnits (readPackageDescription silent f)
+parseCabalFile f = fmap findUnits (readGenericPackageDescription silent f)
 
 
 -- | This is our abstraction for something in a cabal file.
@@ -42,7 +42,7 @@ libUnit lib = Unit { unitName     = UnitLibrary
                    }
 
 exeUnit :: Executable -> Unit
-exeUnit exe = Unit { unitName    = UnitExecutable (exeName exe)
+exeUnit exe = Unit { unitName    = UnitExecutable (unUnqualComponentName (exeName exe))
                    , unitPaths   = hsSourceDirs (buildInfo exe)
                    , unitModules = [] -- other modules?
                    , unitFiles   = case hsSourceDirs (buildInfo exe) of
